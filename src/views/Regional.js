@@ -1,15 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Loader, Breadcrumb, Grid } from 'semantic-ui-react';
+import { Loader, Breadcrumb, Grid, Icon, Header, Dropdown } from 'semantic-ui-react';
 import { Chart } from 'react-google-charts';
 
 class Regional extends React.Component {
 	constructor (props) {
 		super(props);
 
+		this.onDropDonwChange = this.onDropDonwChange.bind(this);
+
 		this.state = {
 			options: {},
-			data: []
+			data: [],
+			date: 'Total'
 		};
 	}
 
@@ -76,42 +79,80 @@ class Regional extends React.Component {
 							});
 						}
 
-						that.setState({ data: newData });
+						const keys = data.map(
+							item => (
+								item.updatedAt.substr(0, 10)
+							)
+						);
+
+						const newOptions = [...new Set(keys)].map(
+							item => (
+								{
+									key: item,
+									text: item,
+									value: item,
+									content: item
+								}
+							)
+						);
+
+						newOptions.unshift(
+							{
+								key: 'Total',
+								text: 'Total',
+								value: 'Total',
+								content: 'Total'
+							}
+						);
+
+						that.setState({
+							data: newData,
+							options: newOptions
+						});
 					}
 				);
 			}
 		);
 	}
 
-	renderPieChart (data) {
-		this.title = `${data.date} ${data.company} ${data.title}`;
-		this.options = {
-			title: this.title,
-			pieHole: 0.4,
-			legend: 'none',
-			slices: {
-				0: { color: '#085c98' },
-				1: { color: '#00964c' },
-				2: { color: '#ea2e2d' },
-				3: { color: '#1babe8' },
-				4: { color: '#ffd026' },
-				5: { color: '#a1a8b3' }
-			}
-		};
+	onDropDonwChange (ev, data) {
+		this.setState({
+			date: data.value
+		});
+	}
 
-		return (
-			<Grid.Column>
-				<Chart
-					key={this.title}
-					chartType='PieChart'
-					data={data.rate}
-					options={this.options}
-					graph_id={`PieChart${this.title}`}
-					width='100%'
-					height='400px'
-				/>
-			</Grid.Column>
-		);
+	renderPieChart (data) {
+		if (data && (this.state.date === 'Total' || this.state.date === data.date)) {
+			this.title = `${data.date} ${data.company} ${data.title}`;
+			this.options = {
+				title: this.title,
+				pieHole: 0.4,
+				legend: 'none',
+				slices: {
+					0: { color: '#085c98' },
+					1: { color: '#00964c' },
+					2: { color: '#ea2e2d' },
+					3: { color: '#1babe8' },
+					4: { color: '#ffd026' },
+					5: { color: '#a1a8b3' }
+				}
+			};
+
+			return (
+				<Grid.Column>
+					<Chart
+						key={this.title}
+						chartType='PieChart'
+						data={data.rate}
+						options={this.options}
+						graph_id={`PieChart${this.title}`}
+						width='100%'
+						height='400px'
+					/>
+				</Grid.Column>
+			);
+		}
+		return null;
 	}
 
 	render () {
@@ -124,6 +165,22 @@ class Regional extends React.Component {
 					<Breadcrumb.Divider icon='right chevron' />
 					<Breadcrumb.Section active>지역별</Breadcrumb.Section>
 				</Breadcrumb>
+				{
+					this.state.data.length >= 1 &&
+					<Header as='h4'>
+						<Icon name='trophy' />
+						<Header.Content>
+							Trending repos
+							{' '}
+							<Dropdown
+								inline header='Adjust time span'
+								options={this.state.options}
+								defaultValue={this.state.options[0].value}
+								onChange={this.onDropDonwChange}
+							/>
+						</Header.Content>
+					</Header>
+				}
 				<p />
 				<div>
 					{
