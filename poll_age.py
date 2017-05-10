@@ -7,7 +7,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 from pandas.io.json import json_normalize
 
-url = 'http://comment.daum.net/poll/polls/tags/of/all/지지율,' + '종합' + '?offset=0&limit=1000'
+url = 'http://comment.daum.net/poll/polls/tags/of/all/지지율,' + '연령별' + '?offset=0&limit=1000'
 
 #Read data from stdin
 def read_in():
@@ -61,6 +61,8 @@ def main():
         return 0
 
     lines['심상정'] = lines['options'].apply(findSim)
+
+    lines['기타'] = 100 - lines['문재인'] - lines['안철수'] - lines['홍준표'] - lines['유승민'] - lines['심상정']
 
     #return the sum to the output stream
     print lines.reset_index().to_json(orient='records')
